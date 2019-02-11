@@ -15,16 +15,6 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 
 
-def config_parse(config):
-    for k0, v0 in config.items():
-        for k1, v1 in v0.items():
-            if v1 == "None":
-                v0[k1] = None
-            else:
-                continue
-    return config
-
-
 def find_checkpoint(indir):
     files = os.listdir(indir)
     r = re.compile('model.ckpt-[0-9]+.index')
@@ -76,17 +66,15 @@ def main(in_config, test_str=None, text_file=None):
     num_tpu_cores = config['parameters']['num_tpu_cores']
     is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
     processor = STIProcessor()
-    label_list_loc = config['paths']['label_list_loc']
     label_list = processor.get_labels()
     vocab_file = config['paths']['vocab_file']
     do_lower_case = config['general']['do_lower_case']
-
-    predictions = {}
     term = config['general']['term']
     indir = config['paths']['indir']
-    # data_dir = config['paths']['indir']
     model_dir = indir
     init_checkpoint = find_checkpoint(indir)
+
+    predictions = {}
 
     tpu_cluster_resolver = None
     master = None

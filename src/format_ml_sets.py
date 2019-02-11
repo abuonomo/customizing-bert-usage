@@ -96,7 +96,7 @@ def get_train_test_dev(df, descriptions, kwd0, field='clean.NASATerms', shrink_f
     return train_set, test_set, dev_set, full_df
 
 
-def main(infile, outdir, n_terms=5, shrink_factor=0.1, balance=False):
+def main(infile, outdir, n_terms=5, shrink_factor=0.1, balance=False, max_threshold=500):
 
     LOG.info('Reading {}'.format(infile))
     df = pd.read_json(infile)
@@ -111,7 +111,8 @@ def main(infile, outdir, n_terms=5, shrink_factor=0.1, balance=False):
 
     df.loc[valid_terms_and_descriptions, 'clean.NASATerms'] = term_sets
 
-    terms_over_t = [(term, count) for term, count in terms.most_common() if count > 500]
+    terms_over_t = [(term, count) for term, count in terms.most_common() if count > max_threshold]
+    assert len(terms_over_t) > 0, LOG.error('No terms over {}'.format(max_threshold))
 
     selected_terms = spread_rand_select(n_terms, terms_over_t)
     descriptions = df.loc[valid_terms_and_descriptions, 'description'].apply(clean_description)
@@ -119,7 +120,7 @@ def main(infile, outdir, n_terms=5, shrink_factor=0.1, balance=False):
     LOG.info('Making ml sets with shrink factor {} and balance set to {}'.format(shrink_factor, balance))
     ml_sets = {}
     for t in selected_terms:
-        tmp_df = df.loc[:valid_terms_and_descriptions, :]
+        tmp_df = df.loc[valid_terms_and_descriptions, :]
         train_set, test_set, dev_set, full_df = get_train_test_dev(tmp_df, descriptions, t[0], field='clean.NASATerms',
                                                                    shrink_factor=shrink_factor, balance=balance)
         ml_sets[t[0]] = [train_set, test_set, dev_set]
@@ -149,9 +150,11 @@ if __name__ == '__main__':
     parser.add_argument('outdir', help='output directory in which to place directories of ml sets', type=Path)
     parser.add_argument('n_terms', help='number of keywords for which to create ml sets', type=int)
     parser.add_argument('shrink_factor', help='by what factor should we shrink our ml sets', type=float)
+    parser.add_argument('--max_threshold', help='min occurence for term to be considered', type=int)
     parser.add_argument('--balance', dest='balance', action='store_true')
     parser.add_argument('--no-balance', dest='balance', action='store_false')
     parser.set_defaults(balance=True)
     args = parser.parse_args()
 
-    main(args.infile, args.outdir, args.n_terms, args.shrink_factor, args.balance)
+    main(args.infile, args.outdir, args.n_terms, args.shrink_factor,
+         args.balance, args.max_threshold)
