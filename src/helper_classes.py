@@ -9,6 +9,7 @@ import modeling as modeling
 import optimization as optimization
 from run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
 import tensorflow as tf
+import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ class STIProcessor(DataProcessor):
 
 
 def find_checkpoint(indir):
+    LOG.info('Finding checkpoint in {}'.format(indir))
     files = os.listdir(indir)
     r = re.compile('model.ckpt-[0-9]+.index')
     checkpoints = list(filter(r.match, files))
@@ -78,14 +80,13 @@ def parse_config_nones(config):
 
 
 def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoint=None,
-              do_train=False, do_eval=False, do_predict=False, do_lower_case=False,
+              do_train=False, do_eval=False, do_predict=False, do_lower_case=False, text_list=None,
               task_name='sti', save_checkpoints_steps=1000, iterations_per_loop=1000,
               train_batch_size=32, eval_batch_size=32, predict_batch_size=8, max_seq_length=128,
               num_train_epochs=3.0, warmup_proportion=0.1, learning_rate=2e-5, num_tpu_cores=8):
     tf.logging.set_verbosity(tf.logging.INFO)
 
     processors = {"sti": STIProcessor}
-
     if not do_train and not do_eval and not do_predict:
         raise ValueError(
             "At least one of `do_train`, `do_eval` or `do_predict' must be True.")
@@ -107,12 +108,16 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
     tokenizer = tokenization.FullTokenizer(
         vocab_file=vocab_file, do_lower_case=do_lower_case)
 
+    if do_predict:
+        model_dir = data_dir
+    else:
+        model_dir = output_dir
     tpu_cluster_resolver = None
     is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
     run_config = tf.contrib.tpu.RunConfig(
         cluster=tpu_cluster_resolver,
         master=None,
-        model_dir=output_dir,
+        model_dir=model_dir,
         save_checkpoints_steps=save_checkpoints_steps,
         tpu_config=tf.contrib.tpu.TPUConfig(
             iterations_per_loop=iterations_per_loop,
@@ -130,7 +135,7 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
         num_warmup_steps = int(num_train_steps * warmup_proportion)
 
     if do_predict:
-        init_checkpoint = find_checkpoint(output_dir)
+        init_checkpoint = find_checkpoint(data_dir)
 
     model_fn = model_fn_builder(
         bert_config=bert_config,
@@ -198,7 +203,12 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
 
     if do_predict:
         LOG.info('PREDICT! data dir: {}'.format(data_dir))
-        predict_examples = processor.get_test_examples(data_dir)
+        if text_list is not None: # pass list directly within python
+            lines = [('0', txt) for txt in text_list]
+            lines.insert(0, ())
+            predict_examples = processor._create_examples(lines, 'test')
+        else:
+            predict_examples = processor.get_test_examples(data_dir)
         predict_file = os.path.join(output_dir, "predict.tf_record")
         file_based_convert_examples_to_features(predict_examples, label_list,
                                                 max_seq_length, tokenizer,
@@ -218,13 +228,15 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
         result = estimator.predict(input_fn=predict_input_fn)
 
         output_predict_file = os.path.join(output_dir, "test_results.tsv")
-        LOG.info('Output: {}'.format(output_predict_file))
+        predictions = []
         with tf.gfile.GFile(output_predict_file, "w") as writer:
             tf.logging.info("***** Predict results *****")
             for prediction in result:
+                predictions.append(prediction)
                 output_line = "\t".join(
                     str(class_probability) for class_probability in prediction) + "\n"
                 writer.write(output_line)
+        return np.stack(predictions, axis=0)
 
 
 if __name__ == '__main__':
