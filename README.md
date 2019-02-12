@@ -2,7 +2,7 @@
 
 1) Clone this repo.
 2) Download the BERT model for your task. You can see information on a variety of BERT models [here](https://github.com/google-research/bert). I have tested this project using [BERT-Base, Cased](https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip). Place these models in the root directory of this repo (be sure not to commit the models later!). 
-3) Build the docker image with necessary dependenices by executing `docker build -t tensorflow/tensorflow:latest-py3-lab .`. You can then run `docker run -it -p 8888:8888 -p 6006:6006 -v $(pwd)/:/home/ tensorflow/tensorflow:latest-py3-lab` to start the container. Then, either bash into the container, or start a terminal using the jupyterlab interface.
+3) Build the docker image with necessary dependenices by executing:   `docker build -t tensorflow/tensorflow:latest-py3-lab .`  You can then run:   `docker run -it -p 8888:8888 -p 6006:6006 -v $(pwd)/:/home/ tensorflow/tensorflow:latest-py3-lab`   to start the container. Then, either bash into the container, or start a terminal using the jupyterlab interface.
 4) Generate train, dev, and test .tsv files. You can run [this_script](test/example_scripts/make_formatted_sets.sh) to generate correctly formatted example tsv datasets. This script uses the example input dataset [here](test/datasets/results_small.json).  
 ** keep in mind that example tsv files generated with this script will likely have too few data points in order to be used by BERT without encountering an error.
 5) Once you have an adequately large dataset, see [this script](test/example_scripts/train_and_eval.sh). It looks like this:
