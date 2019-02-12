@@ -1,11 +1,12 @@
 FROM tensorflow/tensorflow:latest-gpu-py3
 
-RUN pip install jupyterlab & \
-    pip install pyyaml & \
+RUN pip install pyyaml && \
     pip install tqdm
 
+RUN pip install jupyterlab
+
 EXPOSE 8888
+EXPOSE 6006
 WORKDIR /home/
 ENV PYTHONPATH ="PYTHONPATH:/home/bert/:/home/src/"
-ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"]
-
+ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"
