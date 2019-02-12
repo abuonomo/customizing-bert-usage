@@ -38,10 +38,3 @@ In order to fine-tune using BERT with a significantly-sized dataset, you may wan
 
 After you create your models, you may want to obtain predictions interactively in a jupyter notebook. You can see an example of this [here](notebooks/do_predictions.ipynb).
 
-use script to make model  
-    - clarify which folder for what, where do you manipulate params  
-use model to make predictions
-
-use model to make multiple predictions
-
-add bert pythonpath
