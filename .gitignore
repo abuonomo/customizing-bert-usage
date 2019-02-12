@@ -3,6 +3,7 @@ cased_L-12_H-768_A-12/*
 data/*
 research/*
 runs/*
+**/__pycache__/*
 **/.idea/*
 **/.ipynb_checkpoints/*
 
