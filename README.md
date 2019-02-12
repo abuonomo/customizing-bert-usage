@@ -1,5 +1,7 @@
 # How to Use BERT
 
+1) Clone this repo.
+2) 
 get bert  
 get bert models for your use case
 
