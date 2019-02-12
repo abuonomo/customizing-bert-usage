@@ -1,22 +1,5 @@
-general:
   do_lower_case: True
-  term: 'space_sciences'
-
-paths:
-  indir: "space_sciences/tf"
+  data_dir: "space_sciences/tf"
   bert_config_file: 'cased_L-12_H-768_A-12/bert_config.json'
-#  output_dir: "space_sciences/tf"
   output_dir: "experiments/test_results/"
-  label_list_loc: 'space_sciences/id_to_label.json'
   vocab_file: "cased_L-12_H-768_A-12/vocab.txt"
-
-parameters:
-  learning_rate: 2e-5
-  num_train_steps: None
-  num_warmup_steps: None
-  train_batch_size: 32
-  eval_batch_size: 8
-  predict_batch_size: 8
-  save_checkpoints_steps: 1000
-  iterations_per_loop: 1000
-  num_tpu_cores: 8

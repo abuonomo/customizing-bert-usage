@@ -4,5 +4,6 @@ RUN pip install jupyterlab, pyyaml, tqdm
 
 EXPOSE 8888
 WORKDIR /home/
-ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"] 
+ENV PYTHONPATH ="PYTHONPATH:/home/bert/"
+ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"]
 

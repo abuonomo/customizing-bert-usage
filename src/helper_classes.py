@@ -1,11 +1,13 @@
 import argparse
 import logging
 import os
+import re
 
-import bert.tokenization as tokenization
-import bert.modeling as modeling
-import bert.optimization as optimization
-from bert.run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
+import yaml
+import tokenization
+import modeling as modeling
+import optimization as optimization
+from run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
 import tensorflow as tf
 
 logging.basicConfig(level=logging.INFO)
@@ -36,14 +38,6 @@ class STIProcessor(DataProcessor):
         # return ["0", "1"]
         return ["0", "1"]
 
-    # def get_labels(self, label_json):
-    #     """See base class."""
-    #     # with open('{}/id_to_label.json'.format(FLAGS.data_dir), 'r') as f0:
-    #     #     id_to_label = json.load(f0)
-    #     with open(label_json, 'r') as f0:
-    #         id_to_label = json.load(f0)
-    #     return [str(i) for i in range(len(id_to_label))]
-
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
         examples = []
@@ -61,6 +55,18 @@ class STIProcessor(DataProcessor):
         return examples
 
 
+def find_checkpoint(indir):
+    files = os.listdir(indir)
+    r = re.compile('model.ckpt-[0-9]+.index')
+    checkpoints = list(filter(r.match, files))
+    values = [int(re.search(r'\d+', checkpoint).group()) for checkpoint in checkpoints]
+    i = values.index(max(values))
+    ckpt = checkpoints[i]
+    init_checkpoint = '{}/{}'.format(indir, ckpt)
+    LOG.info('Found checkpoint at \"{}\"'.format(init_checkpoint))
+    return init_checkpoint
+
+
 def parse_config_nones(config):
     for k0, v0 in config.items():
         for k1, v1 in v0.items():
@@ -72,16 +78,13 @@ def parse_config_nones(config):
 
 
 def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoint=None,
-              do_train=False, do_eval=False, do_predict=False, do_lower_case=True,
+              do_train=False, do_eval=False, do_predict=False, do_lower_case=False,
               task_name='sti', save_checkpoints_steps=1000, iterations_per_loop=1000,
-              train_batch_size=32, eval_batch_size=32, predict_batch_size=8,
-              max_seq_length=128, num_train_epochs=3.0, warmup_proportion=0.1, learning_rate=2e-5,
-              num_tpu_cores=8):
+              train_batch_size=32, eval_batch_size=32, predict_batch_size=8, max_seq_length=128,
+              num_train_epochs=3.0, warmup_proportion=0.1, learning_rate=2e-5, num_tpu_cores=8):
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    processors = {
-        "sti": STIProcessor,
-    }
+    processors = {"sti": STIProcessor}
 
     if not do_train and not do_eval and not do_predict:
         raise ValueError(
@@ -123,7 +126,11 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
         train_examples = processor.get_train_examples(data_dir)
         num_train_steps = int(
             len(train_examples) / train_batch_size * num_train_epochs)
+        assert num_train_steps != 0, LOG.error('Not enough data. num_train_steps is 0.')
         num_warmup_steps = int(num_train_steps * warmup_proportion)
+
+    if do_predict:
+        init_checkpoint = find_checkpoint(output_dir)
 
     model_fn = model_fn_builder(
         bert_config=bert_config,
@@ -157,6 +164,7 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
             seq_length=max_seq_length,
             is_training=True,
             drop_remainder=True)
+        LOG.info('TRAIN STEPS: {}'.format(num_train_steps))
         estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
 
     if do_eval:
@@ -214,15 +222,24 @@ def bert_main(data_dir, bert_config_file, vocab_file, output_dir, init_checkpoin
         with tf.gfile.GFile(output_predict_file, "w") as writer:
             tf.logging.info("***** Predict results *****")
             for prediction in result:
-                LOG.info(prediction)
                 output_line = "\t".join(
                     str(class_probability) for class_probability in prediction) + "\n"
                 writer.write(output_line)
 
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(
-#         description="what does this script do?")
-#     parser.add_argument('i', help='description of parameter')
-#     args = parser.parse_args()
-#     main(args.i)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="what does this script do?")
+    parser.add_argument('data_dir', help="""The input data dir. Should contain the .tsv files (or other data files) for the task.""")
+    parser.add_argument('bert_config_file', help="""The config json file corresponding to the pre-trained BERT model. This specifies the model architecture.""")
+    parser.add_argument('vocab_file', help='The vocabulary file that the BERT model was trained on.')
+    parser.add_argument('output_dir', help='The output directory where the model checkpoints will be written.')
+    parser.add_argument('--do_train', help='train model on new data on train set', action='store_true', default=False)
+    parser.add_argument('--do_eval', help='evaluate results on dev set', action='store_true', default=False)
+    parser.add_argument('--do_predict', help='make new predictions on test set', action='store_true', default=False)
+    parser.add_argument('--do_lower', help='set this flag if you are not using cased model', action='store_true', default=False)
+    parser.add_argument('--init_checkpoint', help='checkpoint with which to make predictions', default=None, type=str)
+    args = parser.parse_args()
+    bert_main(args.data_dir, args.bert_config_file, args.vocab_file, args.output_dir,
+              do_train=args.do_train, do_eval=args.do_eval, do_predict=args.do_predict,
+              do_lower_case=args.do_lower, init_checkpoint=args.init_checkpoint)

@@ -8,3 +8,5 @@ use script to make model
 use model to make predictions
 
 use model to make multiple predictions
+
+add bert pythonpath
