@@ -1,6 +1,6 @@
 # How to Use BERT
 
-1) Clone this repo.
+1) Clone this repo. Initialize submodule with `git submodule init` and update submodule with `git submodule update`.
 2) Download the BERT model for your task. You can see information on a variety of BERT models [here](https://github.com/google-research/bert). I have tested this project using [BERT-Base, Cased](https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip). Place these models in the root directory of this repo (be sure not to commit the models later!). 
 3) Build the docker image with necessary dependenices by executing:  
     `docker build -t tensorflow/tensorflow:latest-py3-lab .`  
