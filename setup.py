@@ -10,7 +10,7 @@ setup(
     long_description=readme,
     author='Anthony Buonomo',
     author_email='anthony.r.buonomo@nasa.gov',
-    # packages=find_packages(where='src'),
+    # packages=find_packages(where='dsbert'),
     packages=find_packages(),
     install_requires=[
        'PyYAML>=3.13',
