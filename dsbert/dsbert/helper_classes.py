@@ -7,7 +7,7 @@ import yaml
 import dsbert.bert.tokenization as tokenization
 import dsbert.bert.modeling as modeling
 import dsbert.bert.optimization as optimization
-from run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
+from dsbert.bert.run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
 import tensorflow as tf
 import numpy as np
 
