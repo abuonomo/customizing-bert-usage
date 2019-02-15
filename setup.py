@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open('README.rst') as f:
+with open('README.md') as f:
     readme = f.read()
 
 setup(
@@ -10,5 +10,5 @@ setup(
     long_description=readme,
     author='Anthony Buonomo',
     author_email='anthony.r.buonomo@nasa.gov',
-    packages=find_packages(where='./src')
+    packages=find_packages(where='./src'),
 )
