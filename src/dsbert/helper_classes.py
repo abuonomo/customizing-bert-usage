@@ -4,10 +4,10 @@ import os
 import re
 
 import yaml
-import src.bert.tokenization as tokenization
-import src.bert.modeling as modeling
-import src.bert.optimization as optimization
-from src.bert.run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
+import bert.tokenization as tokenization
+import bert.modeling as modeling
+import bert.optimization as optimization
+from bert.run_classifier import DataProcessor, InputExample, model_fn_builder, file_based_convert_examples_to_features, file_based_input_fn_builder
 import tensorflow as tf
 import numpy as np
 
