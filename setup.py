@@ -10,13 +10,11 @@ setup(
     long_description=readme,
     author='Anthony Buonomo',
     author_email='anthony.r.buonomo@nasa.gov',
-    # packages=find_packages(where='dsbert'),
     packages=find_packages(),
     install_requires=[
        'PyYAML>=3.13',
        'tensorflow>=1.11.0',
        'pandas>=0.23.4',
        'numpy>=1.15.2',
-       # 'Flask>=1.0.2',
     ],
 )
