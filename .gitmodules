@@ -1,3 +1,6 @@
 [submodule "bert"]
 	path = dsbert/bert
 	url = https://github.com/google-research/bert.git
+[submodule "src/bert"]
+	path = src/bert
+	url = https://github.com/google-research/bert.git

@@ -4,7 +4,7 @@ with open('README.md') as f:
     readme = f.read()
 
 setup(
-    name='dsbert',
+    name='src',
     version='0.1.0',
     description='Template for using Google\'s BERT for binary classification',
     long_description=readme,
